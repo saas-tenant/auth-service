@@ -18,5 +18,89 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // url      = env("DATABASE_URL")
+}
+
+
+model HealthCheck {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+}
+
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  DISABLED
+}
+
+enum TenantStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum RoleType {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  status      TenantStatus @default(ACTIVE)
+
+  users       Membership[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id          String   @id @default(cuid())
+
+  firstName   String
+  lastName    String
+
+  email       String   @unique
+
+  password    String
+
+  status      UserStatus @default(ACTIVE)
+
+  memberships Membership[]
+
+  sessions    Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Membership {
+  id String @id @default(cuid())
+
+  tenantId String
+  userId String
+
+  role RoleType
+
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete: Cascade)
+  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
+
+  @@unique([tenantId,userId])
+}
+
+model Session {
+  id String @id @default(cuid())
+
+  refreshToken String @unique
+
+  userId String
+
+  user User @relation(fields:[userId], references:[id])
+
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
 }
