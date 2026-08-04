@@ -21,86 +21,84 @@ datasource db {
   // url      = env("DATABASE_URL")
 }
 
-
 model HealthCheck {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 }
 
+// enum UserStatus {
+//   ACTIVE
+//   PENDING
+//   DISABLED
+// }
 
-enum UserStatus {
-  ACTIVE
-  PENDING
-  DISABLED
-}
+// enum TenantStatus {
+//   ACTIVE
+//   DISABLED
+// }
 
-enum TenantStatus {
-  ACTIVE
-  DISABLED
-}
+// enum RoleType {
+//   OWNER
+//   ADMIN
+//   MEMBER
+// }
 
-enum RoleType {
-  OWNER
-  ADMIN
-  MEMBER
-}
+// model Tenant {
+//   id          String   @id @default(cuid())
+//   name        String
+//   slug        String   @unique
+//   status      TenantStatus @default(ACTIVE)
 
-model Tenant {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  status      TenantStatus @default(ACTIVE)
+//   users       Membership[]
 
-  users       Membership[]
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+// }
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
+// model User {
+//   id          String   @id @default(cuid())
 
-model User {
-  id          String   @id @default(cuid())
+//   firstName   String
+//   lastName    String
 
-  firstName   String
-  lastName    String
+//   email       String   @unique
 
-  email       String   @unique
+//   password    String
 
-  password    String
+//   status      UserStatus @default(ACTIVE)
 
-  status      UserStatus @default(ACTIVE)
+//   memberships Membership[]
 
-  memberships Membership[]
+//   sessions    Session[]
 
-  sessions    Session[]
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// model Membership {
+//   id String @id @default(cuid())
 
-model Membership {
-  id String @id @default(cuid())
+//   tenantId String
+//   userId String
 
-  tenantId String
-  userId String
+//   role RoleType
 
-  role RoleType
+//   tenant Tenant @relation(fields:[tenantId], references:[id], onDelete: Cascade)
+//   user User @relation(fields:[userId], references:[id], onDelete: Cascade)
 
-  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete: Cascade)
-  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
+//   @@unique([tenantId,userId])
+// }
 
-  @@unique([tenantId,userId])
-}
+// model Session {
+//   id String @id @default(cuid())
 
-model Session {
-  id String @id @default(cuid())
+//   refreshToken String @unique
 
-  refreshToken String @unique
+//   userId String
 
-  userId String
+//   user User @relation(fields: [userId], references: [id])
 
-  user User @relation(fields:[userId], references:[id])
+//   expiresAt DateTime
 
-  expiresAt DateTime
-
-  createdAt DateTime @default(now())
-}
+//   createdAt DateTime @default(now())
+// }
