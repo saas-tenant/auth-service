@@ -7,12 +7,12 @@ export class AuthRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findUserByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-    });
+    // return this.prisma.user.findUnique({
+    // where: { email },
+    // });
   }
 
-  transaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-    return this.prisma.$transaction(fn);
-  }
+  // transaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  //   // return this.prisma.$transaction(fn);
+  // }
 }

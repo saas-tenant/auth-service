@@ -7,7 +7,7 @@ import {
 import { verifySession } from 'supertokens-node/recipe/session/framework/express';
 
 @Injectable()
-export class SuperTokensAuthGuard implements CanActivate {
+export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx = context.switchToHttp();
     const req = ctx.getRequest();

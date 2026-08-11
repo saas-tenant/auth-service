@@ -1,11 +1,11 @@
-import { SuperTokensAuthGuard } from '@/auth/auth.guard';
+import { JwtAuthGuard } from '@/auth/auth.guard';
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
 import { SessionContainer } from 'supertokens-node/recipe/session';
 
 @Controller('users')
 export class UsersController {
   @Get('me')
-  @UseGuards(SuperTokensAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async getMyProfile(@Req() req: any) {
     // req.session is populated by SuperTokens verifySession() inside AuthGuard
     const session: SessionContainer = req.session;

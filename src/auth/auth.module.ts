@@ -7,21 +7,15 @@ import { TokenService } from '@/modules/auth/services/jwt.service';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthRepository } from '@/modules/auth/repositories/auth.repository';
 import { SupertokensService } from '@/modules/auth/services/supertokens.service';
+import { ZitadelAuthGuard } from '@/modules/auth/guards/zitadel-auth.guard';
+import { ZitadelService } from '@/modules/auth/services/zitadel.service';
 
 @Module({
   imports: [
     PrismaModule, // Provides PrismaService
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secret',
-    }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    PasswordService,
-    TokenService,
-    AuthRepository,
-    SupertokensService,
-  ],
+  providers: [ZitadelService, ZitadelAuthGuard, AuthService],
+  exports: [ZitadelService, ZitadelAuthGuard, AuthService], // Export ZitadelService and ZitadelAuthGuard for use in other modules
 })
 export class AuthModule {}

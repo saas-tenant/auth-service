@@ -1,59 +1,63 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+
 import { PrismaService } from '@/database/prisma.service';
-import { TokenService } from '@/modules/auth/services/jwt.service';
-import { PasswordService } from '@/modules/auth/services/password.service';
+import { ZitadelUser } from '@/modules/auth/services/zitadel.service';
 import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly passwordService: PasswordService,
-    private readonly tokenService: TokenService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async register(dto: RegisterDto) {
-    // Check email
+  async register(zitadelUser: ZitadelUser, dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
       where: {
-        email: dto.email,
+        zitadelId: zitadelUser.sub,
       },
     });
 
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('User is already registered');
     }
 
-    // Hash password
-    const hashedPassword = await this.passwordService.hash(dto.password);
+    if (!zitadelUser.email) {
+      throw new ConflictException('ZITADEL account does not have an email');
+    }
 
-    // Transaction
-    return this.prisma.$transaction(async (tx) => {
-      // Create tenant
+    const existingEmail = await this.prisma.user.findUnique({
+      where: {
+        email: zitadelUser.email,
+      },
+    });
+
+    if (existingEmail) {
+      throw new ConflictException('Email is already registered');
+    }
+
+    const slug = this.generateSlug(dto.company);
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: {
           name: dto.company,
-          slug: this.generateSlug(dto.company),
+          slug,
         },
       });
 
-      // Create user
       const user = await tx.user.create({
         data: {
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          email: dto.email,
-          password: hashedPassword,
+          zitadelId: zitadelUser.sub,
+
+          firstName: zitadelUser.given_name ?? zitadelUser.name ?? '',
+
+          lastName: zitadelUser.family_name ?? '',
+
+          email: zitadelUser.email as any,
+
+          status: 'ACTIVE',
         },
       });
 
-      // Owner membership
-      await tx.membership.create({
+      const membership = await tx.membership.create({
         data: {
           tenantId: tenant.id,
           userId: user.id,
@@ -61,47 +65,33 @@ export class AuthService {
         },
       });
 
-      const payload = {
-        sub: user.id,
-        tenantId: tenant.id,
-        email: user.email,
-        role: 'OWNER',
-      };
-
-      const accessToken = this.tokenService.generateAccessToken(payload);
-
-      const refreshToken = this.tokenService.generateRefreshToken(payload);
-
-      // Store session
-      await tx.session.create({
-        data: {
-          userId: user.id,
-          refreshToken,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-      });
-
       return {
-        accessToken,
-        refreshToken,
-
-        user: {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-        },
-
-        tenant: {
-          id: tenant.id,
-          name: tenant.name,
-          slug: tenant.slug,
-        },
+        user,
+        tenant,
+        membership,
       };
     });
+
+    return {
+      user: {
+        id: result.user.id,
+        zitadelId: result.user.zitadelId,
+        email: result.user.email,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+      },
+
+      tenant: {
+        id: result.tenant.id,
+        name: result.tenant.name,
+        slug: result.tenant.slug,
+      },
+
+      role: result.membership.role,
+    };
   }
 
-  private generateSlug(name: string): string {
+  private generateSlug(name: string) {
     return (
       name
         .toLowerCase()
@@ -110,73 +100,7 @@ export class AuthService {
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-') +
       '-' +
-      Math.floor(Math.random() * 10000)
+      Date.now()
     );
-  }
-
-  async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
-      include: {
-        memberships: {
-          include: {
-            tenant: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const validPassword = await this.passwordService.compare(
-      dto.password,
-      user.password,
-    );
-
-    if (!validPassword) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const membership = user.memberships[0];
-
-    if (!membership) {
-      throw new UnauthorizedException('User has no tenant');
-    }
-
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      tenantId: membership.tenantId,
-      role: membership.role,
-    };
-
-    const accessToken = this.tokenService.generateAccessToken(payload);
-
-    const refreshToken = this.tokenService.generateRefreshToken(payload);
-
-    await this.prisma.session.create({
-      data: {
-        userId: user.id,
-        refreshToken,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      },
-      tenant: membership.tenant,
-      role: membership.role,
-    };
   }
 }
