@@ -7,6 +7,7 @@ import {
 import { RegisterDto } from './dto/register.dto';
 import { UsersService } from '../users/users.service';
 import { ZitadelService } from '@/modules/auth/services/zitadel.service';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -74,6 +75,25 @@ export class AuthService {
       }
 
       throw new InternalServerErrorException('Registration failed');
+    }
+  }
+
+  async setPassword(dto: RegisterDto) {
+    // 1. Find the user in our database
+    const user = await this.usersService.findByEmail(dto.email);
+
+    if (!user) {
+      throw new ConflictException('User does not exist');
+    }
+
+    try {
+      // 2. Set password in ZITADEL
+      await this.zitadelService.setPassword(user.zitadelUserId, dto.password);
+
+      return { message: 'Password set successfully' };
+    } catch (error) {
+      console.error('Set password failed:', error);
+      throw new InternalServerErrorException('Set password failed');
     }
   }
 }

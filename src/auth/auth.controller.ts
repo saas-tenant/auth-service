@@ -11,4 +11,9 @@ export class AuthController {
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
+
+  @Post('set-password')
+  setPassword(@Body() dto: RegisterDto) {
+    return this.authService.setPassword(dto);
+  }
 }

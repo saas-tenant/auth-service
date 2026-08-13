@@ -45,16 +45,20 @@ export class ZitadelService {
 
   async setPassword(userId: string, password: string) {
     const client = await this.getClient();
+    try {
+      return client.users.setPassword({
+        userServiceSetPasswordRequest: {
+          userId,
 
-    return client.users.setPassword({
-      userServiceSetPasswordRequest: {
-        userId,
-
-        newPassword: {
-          password,
+          newPassword: {
+            password,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      console.error('Failed to set password:', error);
+      throw new Error('Failed to set password');
+    }
   }
 
   async deleteUser(userId: string) {
@@ -65,5 +69,22 @@ export class ZitadelService {
         userId,
       },
     });
+  }
+
+  async getUserByEmail(email: string) {
+    // const client = await this.getClient();
+    // const response = await client.users.listUsers({
+    //   userServiceListUsersRequest: {
+    //     query: {
+    //       emailQuery: {
+    //         email,
+    //       },
+    //     },
+    //   },
+    // });
+    // if (response.result?.length === 0) {
+    //   return null;
+    // }
+    // return response.result[0];
   }
 }
