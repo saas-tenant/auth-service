@@ -1,20 +1,35 @@
-import { JwtAuthGuard } from '@/auth/auth.guard';
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
-import { SessionContainer } from 'supertokens-node/recipe/session';
+import { ZitadelAuthGuard } from '@/auth/auth.guard';
+import { UsersService } from './users.service';
+import {
+  Controller,
+  Get,
+  Req,
+  UseGuards,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 @Controller('users')
 export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
   @Get('me')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ZitadelAuthGuard)
   async getMyProfile(@Req() req: any) {
-    // req.session is populated by SuperTokens verifySession() inside AuthGuard
-    const session: SessionContainer = req.session;
-    const userId = session.getUserId();
+    const zitadelUserId = req.user?.sub;
+
+    if (!zitadelUserId) {
+      throw new UnauthorizedException('Invalid authentication token');
+    }
+
+    const user = await this.usersService.findByZitadelId(zitadelUserId);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
 
     return {
       status: 'OK',
-      userId,
-      message: 'This is a protected route! Session is valid.',
+      user,
     };
   }
 }

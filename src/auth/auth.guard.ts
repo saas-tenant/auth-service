@@ -4,28 +4,51 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { verifySession } from 'supertokens-node/recipe/session/framework/express';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const ctx = context.switchToHttp();
-    const req = ctx.getRequest();
-    const res = ctx.getResponse();
+export class ZitadelAuthGuard implements CanActivate {
+  private readonly issuer = process.env.ZITADEL_ISSUER!;
+  private readonly audience = process.env.ZITADEL_CLIENT_ID!;
 
-    console.log(
-      'SuperTokensAuthGuard: Verifying session for request:',
-      req.cookies,
-      req.url,
-    );
+  private readonly jwks = createRemoteJWKSet(
+    new URL(`${this.issuer}/oauth/v2/keys`),
+  );
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+
+    const authorization = request.headers.authorization;
+
+    console.log('========== ZITADEL AUTH ==========');
+    console.log('URL:', request.url);
+    console.log('Authorization:', request.headers.authorization);
+    console.log('Cookies:', request.cookies);
+    console.log('==================================');
+
+    if (!authorization) {
+      throw new UnauthorizedException('Missing access token');
+    }
+
+    const [type, token] = authorization.split(' ');
+
+    if (type !== 'Bearer' || !token) {
+      throw new UnauthorizedException('Invalid access token');
+    }
+
     try {
-      // Verify active session using SuperTokens SDK
-      await verifySession()(req, res, (err) => {
-        if (err) throw err;
+      const { payload } = await jwtVerify(token, this.jwks, {
+        issuer: this.issuer,
+        audience: this.audience,
       });
+
+      request.user = payload;
+
       return true;
-    } catch (err) {
-      throw new UnauthorizedException('Invalid or expired session');
+    } catch (error) {
+      console.error('ZITADEL token verification failed:', error);
+
+      throw new UnauthorizedException('Invalid or expired access token');
     }
   }
 }

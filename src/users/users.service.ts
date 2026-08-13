@@ -10,6 +10,11 @@ export class UsersService {
       where: { email },
     });
   }
+  async findByZitadelId(zitadelUserId: string) {
+    return this.prisma.user.findUnique({
+      where: { zitadelUserId },
+    });
+  }
 
   async create(data: {
     zitadelUserId: string;
