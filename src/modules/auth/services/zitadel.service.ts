@@ -1,62 +1,69 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
-
-export interface ZitadelUser {
-  sub: string;
-  email?: string;
-  email_verified?: boolean;
-  given_name?: string;
-  family_name?: string;
-  name?: string;
-  preferred_username?: string;
-}
+import { Injectable } from '@nestjs/common';
+import Zitadel from '@zitadel/zitadel-node';
 
 @Injectable()
 export class ZitadelService {
-  private readonly issuer: string;
-  private readonly clientId: string;
-  private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
+  private readonly client: Zitadel;
 
   constructor() {
-    this.issuer = process.env.ZITADEL_ISSUER ?? '';
-    this.clientId = process.env.ZITADEL_CLIENT_ID ?? '';
-
-    if (!this.issuer) {
-      throw new Error('ZITADEL_ISSUER is not configured');
-    }
-
-    if (!this.clientId) {
-      throw new Error('ZITADEL_CLIENT_ID is not configured');
-    }
-
-    const jwksUrl = new URL('/oauth/v2/keys', this.issuer);
-
-    this.jwks = createRemoteJWKSet(jwksUrl);
+    this.client = Zitadel.withAccessToken(
+      process.env.ZITADEL_URL!,
+      process.env.ZITADEL_SERVICE_TOKEN!,
+    );
   }
 
-  async verifyAccessToken(token: string) {
-    try {
-      const { payload } = await jwtVerify(token, this.jwks, {
-        issuer: this.issuer,
-      });
-
-      return payload;
-    } catch {
-      throw new UnauthorizedException('Invalid or expired access token');
-    }
+  private async getClient() {
+    return this.client;
   }
 
-  async getUserInfo(token: string): Promise<ZitadelUser> {
-    const response = await fetch(new URL('/oidc/v1/userinfo', this.issuer), {
-      headers: {
-        Authorization: `Bearer ${token}`,
+  async createUser(data: {
+    email: string;
+    firstName: string;
+    lastName: string;
+  }) {
+    const client = await this.getClient();
+
+    const response = await client.users.createUser({
+      userServiceCreateUserRequest: {
+        organizationId: process.env.ZITADEL_ORG_ID!,
+
+        human: {
+          profile: {
+            givenName: data.firstName,
+            familyName: data.lastName,
+          },
+
+          email: {
+            email: data.email,
+          },
+        },
       },
     });
 
-    if (!response.ok) {
-      throw new UnauthorizedException('Unable to retrieve user information');
-    }
+    return response;
+  }
 
-    return response.json();
+  async setPassword(userId: string, password: string) {
+    const client = await this.getClient();
+
+    return client.users.setPassword({
+      userServiceSetPasswordRequest: {
+        userId,
+
+        newPassword: {
+          password,
+        },
+      },
+    });
+  }
+
+  async deleteUser(userId: string) {
+    const client = await this.getClient();
+
+    return client.users.deleteUser({
+      userServiceDeleteUserRequest: {
+        userId,
+      },
+    });
   }
 }

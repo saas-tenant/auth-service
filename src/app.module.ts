@@ -6,9 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { SupertokensService } from './modules/auth/services/supertokens.service';
 import { UsersModule } from './users/users.module';
 import { UsersController } from './users/users.controller';
+import { PrismaModule } from './database/prisma.module';
 
 @Module({
-  imports: [HealthModule, AuthModule, UsersModule],
+  imports: [HealthModule, AuthModule, UsersModule, PrismaModule],
   controllers: [HealthController, UsersController],
   providers: [HealthService, SupertokensService],
 })
