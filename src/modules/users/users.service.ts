@@ -2,12 +2,17 @@ import { PrismaService } from '@/database/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { Tenant, User } from '@prisma/client';
+import { TenantContext } from '../tenant/tenant.context';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenantContext: TenantContext,
+  ) {}
 
-  async findByEmail(email: string, tenantId: string) {
+  async findByEmail(email: string) {
+    const tenantId = this.tenantContext.getTenantId();
     return this.prisma.user.findUnique({
       where: {
         tenantId_email: {
@@ -29,9 +34,8 @@ export class UsersService {
     firstName: string;
     lastName: string;
     name: string | null;
-    tenant: Tenant;
-    tenantId: Tenant['id'];
   }) {
+    const tenantId = this.tenantContext.getTenantId();
     return this.prisma.user.create({
       data: {
         zitadelUserId: data.zitadelUserId,
@@ -39,7 +43,17 @@ export class UsersService {
         firstName: data.firstName,
         lastName: data.lastName,
         name: data.name,
-        tenantId: data.tenantId,
+        tenantId: tenantId,
+      },
+    });
+  }
+
+  async findAll() {
+    const tenantId = this.tenantContext.getTenantId();
+
+    return this.prisma.user.findMany({
+      where: {
+        tenantId,
       },
     });
   }

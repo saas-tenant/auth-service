@@ -1,12 +1,17 @@
 import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+
 import { TenantService } from './tenant.service';
+import { TenantContext } from './tenant.context';
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly tenantContext: TenantContext,
+  ) {}
 
-  async use(req: Request, _res: Response, next: NextFunction) {
+  async use(req: Request, res: Response, next: NextFunction) {
     const hostname = req.hostname;
 
     if (!hostname) {
@@ -15,8 +20,15 @@ export class TenantMiddleware implements NestMiddleware {
 
     const tenant = await this.tenantService.findByDomain(hostname);
 
-    req.tenant = tenant;
-
-    next();
+    this.tenantContext.run(
+      {
+        tenantId: tenant.id,
+        domain: tenant.domain,
+      },
+      () => {
+        req.tenant = tenant;
+        next();
+      },
+    );
   }
 }

@@ -28,10 +28,6 @@ export class RegisterDto {
   @MinLength(2)
   lastName: string;
 
-  @IsString()
-  @MinLength(2)
-  domain: string;
-
   @ApiProperty({
     description: 'The password of the user',
     writeOnly: true,

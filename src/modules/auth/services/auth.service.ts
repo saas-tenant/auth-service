@@ -7,27 +7,18 @@ import {
 import { RegisterDto } from '../dto/register.dto';
 import { UsersService } from '../../users/users.service';
 import { ZitadelService } from '@/modules/auth/services/zitadel.service'; //this work
-// import { TenantService } from '@/modules/tenant/tenant.service'; // this not
-import { TenantService } from '../../tenant/tenant.service'; ////this work
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly zitadelService: ZitadelService,
-    private readonly tenantService: TenantService,
     private readonly usersService: UsersService,
   ) {}
 
   async register(dto: RegisterDto) {
-    // 1. Resolve tenant
-    const tenant = await this.tenantService.findByDomain(dto.domain);
-
     // 2. Check user inside THIS tenant
-
-    const existingUser = await this.usersService.findByEmail(
-      dto.email,
-      tenant.id,
-    );
+    // const tenant = await this.tenantService.findByDomain(dto.domain);
+    const existingUser = await this.usersService.findByEmail(dto.email);
 
     if (existingUser) {
       throw new ConflictException('User already exists');
@@ -43,8 +34,6 @@ export class AuthService {
         lastName: dto.lastName,
       });
 
-      const tenant = await this.tenantService.findByDomain(dto.domain);
-
       zitadelUserId = zitadelUser.id;
 
       if (!zitadelUserId) {
@@ -56,13 +45,11 @@ export class AuthService {
 
       // 4. Create application user in SAAS DB
       const user = await this.usersService.create({
-        tenantId: tenant.id,
         zitadelUserId,
         email: dto.email,
         firstName: dto.firstName,
         lastName: dto.lastName,
         name: dto.firstName + dto.lastName,
-        tenant: tenant,
       });
 
       return {
