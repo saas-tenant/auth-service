@@ -4,21 +4,30 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-import { RegisterDto } from './dto/register.dto';
-import { UsersService } from '../users/users.service';
-import { ZitadelService } from '@/modules/auth/services/zitadel.service';
-import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
+import { UsersService } from '../../users/users.service';
+import { ZitadelService } from '@/modules/auth/services/zitadel.service'; //this work
+// import { TenantService } from '@/modules/tenant/tenant.service'; // this not
+import { TenantService } from '../../tenant/tenant.service'; ////this work
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly zitadelService: ZitadelService,
+    private readonly tenantService: TenantService,
     private readonly usersService: UsersService,
   ) {}
 
   async register(dto: RegisterDto) {
-    // 1. Check our database
-    const existingUser = await this.usersService.findByEmail(dto.email);
+    // 1. Resolve tenant
+    const tenant = await this.tenantService.findByDomain(dto.domain);
+
+    // 2. Check user inside THIS tenant
+
+    const existingUser = await this.usersService.findByEmail(
+      dto.email,
+      tenant.id,
+    );
 
     if (existingUser) {
       throw new ConflictException('User already exists');
@@ -34,6 +43,8 @@ export class AuthService {
         lastName: dto.lastName,
       });
 
+      const tenant = await this.tenantService.findByDomain(dto.domain);
+
       zitadelUserId = zitadelUser.id;
 
       if (!zitadelUserId) {
@@ -45,10 +56,13 @@ export class AuthService {
 
       // 4. Create application user in SAAS DB
       const user = await this.usersService.create({
+        tenantId: tenant.id,
         zitadelUserId,
         email: dto.email,
         firstName: dto.firstName,
         lastName: dto.lastName,
+        name: dto.firstName + dto.lastName,
+        tenant: tenant,
       });
 
       return {
@@ -78,22 +92,22 @@ export class AuthService {
     }
   }
 
-  async setPassword(dto: RegisterDto) {
-    // 1. Find the user in our database
-    const user = await this.usersService.findByEmail(dto.email);
+  // async setPassword(dto: RegisterDto) {
+  //   // 1. Find the user in our database
+  //   const user = await this.usersService.findByEmail(dto.email);
 
-    if (!user) {
-      throw new ConflictException('User does not exist');
-    }
+  //   if (!user) {
+  //     throw new ConflictException('User does not exist');
+  //   }
 
-    try {
-      // 2. Set password in ZITADEL
-      await this.zitadelService.setPassword(user.zitadelUserId, dto.password);
+  //   try {
+  //     // 2. Set password in ZITADEL
+  //     await this.zitadelService.setPassword(user.zitadelUserId, dto.password);
 
-      return { message: 'Password set successfully' };
-    } catch (error) {
-      console.error('Set password failed:', error);
-      throw new InternalServerErrorException('Set password failed');
-    }
-  }
+  //     return { message: 'Password set successfully' };
+  //   } catch (error) {
+  //     console.error('Set password failed:', error);
+  //     throw new InternalServerErrorException('Set password failed');
+  //   }
+  // }
 }

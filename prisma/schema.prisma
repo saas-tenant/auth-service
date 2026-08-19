@@ -1,24 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-// generator client {
-//   provider = "prisma-client"
-//   output   = "../generated/prisma"
-// }
-
-// datasource db {
-//   provider = "postgresql"
-// }
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  // url      = env("DATABASE_URL")
 }
 
 model HealthCheck {
@@ -37,61 +22,34 @@ enum TenantStatus {
   DISABLED
 }
 
-enum RoleType {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
 model Tenant {
-  id     String       @id @default(cuid())
+  id     String       @id @default(uuid())
   name   String
   slug   String       @unique
+  domain String       @unique
   status TenantStatus @default(ACTIVE)
-
-  users Membership[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
 
-model Membership {
-  id String @id @default(cuid())
-
-  tenantId String
-  userId   String
-
-  role RoleType
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([tenantId, userId])
-}
-
-model Session {
-  id String @id @default(cuid())
-
-  refreshToken String @unique
-
-  userId String
-
-  user User @relation(fields: [userId], references: [id])
-
-  expiresAt DateTime
-
-  createdAt DateTime @default(now())
+  users User[]
 }
 
 model User {
   id            String @id @default(uuid())
+  tenantId      String
+  tenant        Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   zitadelUserId String @unique
   email         String @unique
   firstName     String
   lastName      String
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  memberships Membership[]
-  sessions    Session[]
+  name   String?
+  status UserStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
 }
