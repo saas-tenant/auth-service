@@ -1,6 +1,6 @@
 import { PrismaService } from '@/database/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { RegisterDto } from '../auth/dto/register.dto';
+import { RegisterDto } from '../../common/dtos/register.dto';
 import { Tenant, User } from '@prisma/client';
 import { TenantContext } from '../tenant/tenant.context';
 

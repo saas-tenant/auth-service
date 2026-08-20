@@ -6,7 +6,7 @@ import {
   UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ZitadelAuthGuard } from '../auth/guards/zitadel.guard';
+import { ZitadelAuthGuard } from '../../common/guards/zitadel.guard';
 
 @Controller('users')
 export class UsersController {

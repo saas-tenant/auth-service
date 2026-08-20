@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-import { RegisterDto } from '../dto/register.dto';
+import { RegisterDto } from '../../../common/dtos/register.dto';
 import { UsersService } from '../../users/users.service';
 import { ZitadelService } from '@/modules/auth/services/zitadel.service'; //this work
 

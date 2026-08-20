@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { ZitadelService } from '@/modules/auth/services/zitadel.service';
 import { UsersModule } from '../users/users.module';
-import { AuthController } from './controllers/auth.controller';
+import { AuthController } from './auth.controller';
 import { AuthService } from './services/auth.service';
 import { TenantModule } from '../tenant/tenant.module';
 
