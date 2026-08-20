@@ -12,6 +12,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "sourceMap": true,
+    "rootDir": ".",
     "outDir": "./dist",
     "strictPropertyInitialization": false,
     "incremental": true,
@@ -21,7 +22,7 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true,
-    "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  
     "paths": {
       "@/*": [
         "./src/*"
@@ -42,5 +43,6 @@
         "./src/shared/*"
       ]
     }
-  }
+  },
+    "include": ["src/**/*.ts", "src/**/*.d.ts"],
 }
