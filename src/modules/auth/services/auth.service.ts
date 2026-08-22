@@ -7,16 +7,19 @@ import {
 import { RegisterDto } from '../../../common/dtos/register.dto';
 import { UsersService } from '../../users/users.service';
 import { ZitadelService } from '@/modules/auth/services/zitadel.service'; //this work
+import { TenantContext } from '../../../common/context/tenant.context';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly zitadelService: ZitadelService,
     private readonly usersService: UsersService,
+    private readonly tenantContext: TenantContext,
   ) {}
 
   async register(dto: RegisterDto) {
     // 2. Check user inside THIS tenant
+    const tenantId = this.tenantContext.getTenantId();
     // const tenant = await this.tenantService.findByDomain(dto.domain);
     const existingUser = await this.usersService.findByEmail(dto.email);
 

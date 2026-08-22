@@ -5,15 +5,16 @@ import {
   Req,
   UseGuards,
   UnauthorizedException,
+  Version,
 } from '@nestjs/common';
 import { ZitadelAuthGuard } from '../../common/guards/zitadel.guard';
 
-@Controller('users')
+@Controller({ path: 'users', version: 'v1' })
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  // @UseGuards(AuthGuard)
+  @Version('1')
   @UseGuards(ZitadelAuthGuard)
   async getMyProfile(@Req() req: any) {
     const zitadelUserId = req.user?.sub;

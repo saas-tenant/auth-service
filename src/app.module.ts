@@ -7,10 +7,11 @@ import { UsersController } from './modules/users/users.controller';
 import { PrismaModule } from './database/prisma.module';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { TenantMiddleware } from './modules/tenant/tenant.middleware';
+import { TenantMiddleware } from './common/middleware/tenant.middleware';
+import { UsersV2Module } from './users-v2/users-v2.module';
 
 @Module({
-  imports: [HealthModule, AuthModule, UsersModule, PrismaModule, TenantModule],
+  imports: [HealthModule, AuthModule, UsersModule, PrismaModule, TenantModule, UsersV2Module],
   controllers: [HealthController, UsersController],
   providers: [HealthService],
 })
