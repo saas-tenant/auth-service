@@ -15,12 +15,14 @@ async function main() {
     {
       name: 'Ramand',
       slug: 'ramand',
-      domain: 'ramand.local',
+      domain: 'ramand.saas.local',
+      zitadelOrgId: '386926120856977563',
     },
     {
       name: 'Elegant',
       slug: 'elegant',
-      domain: 'elegant.local',
+      domain: 'elegant.saas.local',
+      zitadelOrgId: '386926146995880091',
     },
   ];
 

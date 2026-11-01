@@ -1,7 +1,7 @@
 import { PrismaService } from '@/database/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { RegisterDto } from '../../common/dtos/register.dto';
-import { Tenant, User } from '@prisma/client';
+import { $Enums, Tenant, User } from '@prisma/client';
 import { TenantContext } from '../../common/context/tenant.context';
 
 @Injectable()
@@ -22,6 +22,30 @@ export class UsersService {
       },
     });
   }
+
+  async findByTenantEmail(email: string, tenantId: string) {
+    return this.prisma.user.findUnique({
+      where: {
+        tenantId_email: {
+          email,
+          tenantId,
+        },
+      },
+    });
+  }
+
+  async removeUser(user: {
+    id: string;
+    zitadelUserId: string;
+    tenantId: string;
+  }) {
+    return this.prisma.user.delete({
+      where: {
+        id: user.id,
+      },
+    });
+  }
+
   async findByZitadelId(zitadelUserId: string) {
     return this.prisma.user.findUnique({
       where: { zitadelUserId },

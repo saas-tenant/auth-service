@@ -10,5 +10,6 @@ import { TenantModule } from '../tenant/tenant.module';
   imports: [UsersModule, TenantModule],
   controllers: [AuthController],
   providers: [AuthService, ZitadelService],
+  exports: [ZitadelService, AuthService],
 })
 export class AuthModule {}

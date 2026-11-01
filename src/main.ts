@@ -14,8 +14,8 @@ async function bootstrap() {
       'http://localhost:4000',
       'http://localhost:3000',
       'http://localhost:3000',
-      'http://elegant.local:3000',
-      'http://ramand.local:3000',
+      'http://elegant.saas.local:3000',
+      'http://ramand.saas.local:3000',
     ], // Your frontend URL
     allowedHeaders: ['content-type'],
     credentials: true,

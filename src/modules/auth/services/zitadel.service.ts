@@ -20,12 +20,13 @@ export class ZitadelService {
     email: string;
     firstName: string;
     lastName: string;
+    organizationId?: string;
   }) {
     const client = await this.getClient();
 
     const response = await client.users.createUser({
       userServiceCreateUserRequest: {
-        organizationId: process.env.ZITADEL_ORG_ID!,
+        organizationId: data.organizationId,
 
         human: {
           profile: {

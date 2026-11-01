@@ -8,6 +8,8 @@ import { RegisterDto } from '../../../common/dtos/register.dto';
 import { UsersService } from '../../users/users.service';
 import { ZitadelService } from '@/modules/auth/services/zitadel.service'; //this work
 import { TenantContext } from '../../../common/context/tenant.context';
+import { TenantService } from '../../tenant/tenant.service';
+import { log } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -15,18 +17,19 @@ export class AuthService {
     private readonly zitadelService: ZitadelService,
     private readonly usersService: UsersService,
     private readonly tenantContext: TenantContext,
+    private readonly tenantService: TenantService,
   ) {}
 
   async register(dto: RegisterDto) {
     // 2. Check user inside THIS tenant
     const tenantId = this.tenantContext.getTenantId();
-    // const tenant = await this.tenantService.findByDomain(dto.domain);
+    const tenant = await this.tenantService.findbyId(tenantId);
     const existingUser = await this.usersService.findByEmail(dto.email);
 
     if (existingUser) {
       throw new ConflictException('User already exists');
     }
-
+    log(tenant);
     let zitadelUserId: string | undefined;
 
     try {
@@ -35,6 +38,7 @@ export class AuthService {
         email: dto.email,
         firstName: dto.firstName,
         lastName: dto.lastName,
+        organizationId: tenant.zitadelOrgId,
       });
 
       zitadelUserId = zitadelUser.id;
