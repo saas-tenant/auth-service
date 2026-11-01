@@ -10,7 +10,7 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 @Injectable()
 export class ZitadelAuthGuard implements CanActivate {
   private readonly authSecret = process.env.AUTH_SECRET!;
-  private readonly sessionCookie = 'authjs.session-token';
+  private readonly sessionCookie = process.env.AUTH_SESSION_COOKIE!;
 
   private readonly issuer = process.env.ZITADEL_ISSUER!;
   private readonly audience = process.env.ZITADEL_CLIENT_ID!;

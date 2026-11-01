@@ -44,7 +44,12 @@ export class UsersController {
 
     return {
       status: 'OK',
-      user,
+      user: {
+        ...user,
+        tenantId: req.tenant?.id,
+        domain: req.tenant?.domain,
+        tenantName: req.tenant?.name,
+      },
     };
   }
 

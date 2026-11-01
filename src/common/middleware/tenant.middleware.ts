@@ -14,10 +14,16 @@ export class TenantMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const forwardedHost = req.headers['x-forwarded-host'];
 
-    const host =
-      typeof forwardedHost === 'string' ? forwardedHost : req.headers.host;
+    // const host =
+    //   typeof forwardedHost === 'string' ? forwardedHost : req.headers.host;
+    const rawHost =
+      req.headers['x-tenant-host'] ??
+      req.headers['x-forwarded-host'] ??
+      req.headers.host;
 
-    const hostname = host?.split(':')[0];
+    const host = Array.isArray(rawHost) ? rawHost[0] : rawHost;
+
+    const hostname = host?.split(':')[0]?.toLowerCase();
 
     if (!hostname) {
       throw new NotFoundException('Tenant hostname is missing');

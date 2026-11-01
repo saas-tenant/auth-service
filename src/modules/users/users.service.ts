@@ -49,6 +49,9 @@ export class UsersService {
   async findByZitadelId(zitadelUserId: string) {
     return this.prisma.user.findUnique({
       where: { zitadelUserId },
+      include: {
+        tenant: true,
+      },
     });
   }
 
