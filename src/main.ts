@@ -7,6 +7,7 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { UsersV2Module } from './users-v2/users-v2.module';
+import { TenantModule } from './modules/tenant/tenant.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
@@ -31,16 +32,36 @@ async function bootstrap() {
     .setTitle('SaaS API')
     .setDescription('SaaS Platform API')
     .setVersion('1.0')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'x-tenant-host',
+        in: 'header',
+        description:
+          'Tenant domain (e.g. ramand.saas.local or elegant.saas.local)',
+      },
+      'tenant-host', // security scheme name
+    )
     .build();
 
   const configv2 = new DocumentBuilder()
     .setTitle('SaaS API')
     .setDescription('SaaS Platform API')
     .setVersion('2.0')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'x-tenant-host',
+        in: 'header',
+        description:
+          'Tenant domain (e.g. ramand.saas.local or elegant.saas.local)',
+      },
+      'tenant-host', // security scheme name
+    )
     .build();
 
   const v1Document = SwaggerModule.createDocument(app, config, {
-    include: [HealthModule, AuthModule, UsersModule],
+    include: [HealthModule, AuthModule, UsersModule, TenantModule],
   });
 
   const v2Document = SwaggerModule.createDocument(app, configv2, {

@@ -1,9 +1,14 @@
 import { PrismaService } from '@/database/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { OpenFgaService } from '../permission/permission.service';
+import { ClientWriteResponse } from '@openfga/sdk/dist/client';
 
 @Injectable()
 export class TenantService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly openFgaService: OpenFgaService,
+  ) {}
 
   // async findByDomain(domain: string) {
   //   const tenant = await this.prisma.tenant.findUnique({
@@ -47,5 +52,29 @@ export class TenantService {
     }
 
     return tenant;
+  }
+
+  async checkTenantPermission(params: {
+    user: string;
+    tenantId: string;
+    permission: string;
+  }): Promise<boolean> {
+    return this.openFgaService.check({
+      user: `user:${params.user}`,
+      relation: params.permission,
+      object: `tenant:${params.tenantId}`,
+    });
+  }
+
+  async addTenantPermission(params: {
+    user: string;
+    tenantId: string;
+    relation: string;
+  }): Promise<ClientWriteResponse> {
+    return this.openFgaService.write({
+      user: `user:${params.user}`,
+      relation: params.relation,
+      object: `tenant:${params.tenantId}`,
+    });
   }
 }
