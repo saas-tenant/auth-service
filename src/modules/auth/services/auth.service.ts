@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 
 import { RegisterDto } from '../../../common/dtos/register.dto';
-import { UsersService } from '../../users/users.service';
 import { ZitadelService } from '@/modules/auth/services/zitadel.service'; //this work
-import { TenantContext } from '../../../common/context/tenant.context';
 import { TenantService } from '../../tenant/tenant.service';
+import { UsersService } from '@/modules/users/users.service';
 import { log } from 'console';
+import { TenantContext } from '@/common/context/tenant.context';
 
 @Injectable()
 export class AuthService {

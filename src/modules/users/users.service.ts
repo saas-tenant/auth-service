@@ -1,7 +1,8 @@
+import { TenantContext } from '@/common/context/tenant.context';
 import { PrismaService } from '@/database/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { $Enums } from '@prisma/client';
-import { TenantContext } from '../../common/context/tenant.context';
+// import { TenantContext } from '../../common/context/tenant.context';
 
 @Injectable()
 export class UsersService {
