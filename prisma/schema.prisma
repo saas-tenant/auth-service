@@ -22,6 +22,12 @@ enum TenantStatus {
   DISABLED
 }
 
+enum RoleType {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
 model Tenant {
   id           String       @id @default(uuid())
   name         String
@@ -33,24 +39,37 @@ model Tenant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users User[]
+  memberships TenantMembership[]
 }
 
-model User {
-  id            String @id @default(uuid())
-  tenantId      String
-  tenant        Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  zitadelUserId String @unique
-  email         String @unique
-  firstName     String
-  lastName      String
+model TenantMembership {
+  id       String @id @default(uuid())
+  userId   String
+  tenantId String
 
-  name   String?
+  role   RoleType   @default(MEMBER)
   status UserStatus @default(PENDING)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([tenantId, email])
+  @@unique([userId, tenantId])
   @@index([tenantId])
+}
+
+model User {
+  id            String  @id @default(uuid())
+  zitadelUserId String  @unique
+  email         String  @unique
+  firstName     String
+  lastName      String
+  name          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships TenantMembership[]
 }

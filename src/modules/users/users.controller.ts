@@ -71,9 +71,9 @@ export class UsersController {
       const ZitadelResponse = await this.zitadelService.deleteUser(
         user.zitadelUserId,
       );
-      const response = await this.usersService.removeUser(user);
+      const response = await this.usersService.removeUser(user.id, tenant.id);
     } catch (error) {
-      throw new ExceptionsHandler(error);
+      throw new ExceptionsHandler(error as any);
     }
 
     return {

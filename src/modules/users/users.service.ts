@@ -1,7 +1,6 @@
 import { PrismaService } from '@/database/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { RegisterDto } from '../../common/dtos/register.dto';
-import { $Enums, Tenant, User } from '@prisma/client';
+import { $Enums } from '@prisma/client';
 import { TenantContext } from '../../common/context/tenant.context';
 
 @Injectable()
@@ -13,35 +12,31 @@ export class UsersService {
 
   async findByEmail(email: string) {
     const tenantId = this.tenantContext.getTenantId();
+
     return this.prisma.user.findUnique({
-      where: {
-        tenantId_email: {
-          tenantId,
-          email,
+      where: { email },
+      include: {
+        memberships: {
+          where: { tenantId },
+          include: { tenant: true },
         },
       },
     });
   }
 
   async findByTenantEmail(email: string, tenantId: string) {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findFirst({
       where: {
-        tenantId_email: {
-          email,
-          tenantId,
+        email,
+        memberships: {
+          some: { tenantId },
         },
       },
-    });
-  }
-
-  async removeUser(user: {
-    id: string;
-    zitadelUserId: string;
-    tenantId: string;
-  }) {
-    return this.prisma.user.delete({
-      where: {
-        id: user.id,
+      include: {
+        memberships: {
+          where: { tenantId },
+          include: { tenant: true },
+        },
       },
     });
   }
@@ -50,7 +45,18 @@ export class UsersService {
     return this.prisma.user.findUnique({
       where: { zitadelUserId },
       include: {
-        tenant: true,
+        memberships: {
+          include: { tenant: true },
+        },
+      },
+    });
+  }
+
+  async removeUser(userId: string, tenantId: string) {
+    return this.prisma.tenantMembership.deleteMany({
+      where: {
+        userId,
+        tenantId,
       },
     });
   }
@@ -63,6 +69,7 @@ export class UsersService {
     name: string | null;
   }) {
     const tenantId = this.tenantContext.getTenantId();
+
     return this.prisma.user.create({
       data: {
         zitadelUserId: data.zitadelUserId,
@@ -70,7 +77,20 @@ export class UsersService {
         firstName: data.firstName,
         lastName: data.lastName,
         name: data.name,
-        tenantId: tenantId,
+
+        memberships: {
+          create: {
+            tenantId,
+            role: 'MEMBER',
+            status: 'PENDING',
+          },
+        },
+      },
+      include: {
+        memberships: {
+          where: { tenantId },
+          include: { tenant: true },
+        },
       },
     });
   }
@@ -80,7 +100,15 @@ export class UsersService {
 
     return this.prisma.user.findMany({
       where: {
-        tenantId,
+        memberships: {
+          some: { tenantId },
+        },
+      },
+      include: {
+        memberships: {
+          where: { tenantId },
+          include: { tenant: true },
+        },
       },
     });
   }
